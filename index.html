@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kopano Isago Mogadile — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=Archivo:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a coach's chalk slate. Black & white kit colours, one gold "captain's armband" accent.
+   Hero = playable pitch (O = my skills/projects, X = the opposition) beside a scouting report.
+   All the content (squad, fixtures, trophies...) lives in the data block in the script at the bottom. */
+:root{
+  --slate:#0c0c0d;
+  --slate-2:#161618;
+  --chalk:#f2f1ec;
+  --chalk-dim:#9d9c96;
+  --line:#2c2c2f;
+  --armband:#d9b45a;
+  --f-display:"Big Shoulders Display","Oswald","Arial Narrow",Impact,sans-serif;
+  --f-body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"DM Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--slate);color:var(--chalk);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+::selection{background:var(--armband);color:var(--slate)}
+.wrap{max-width:1120px;margin:0 auto}
+a{color:var(--chalk)}
+:focus-visible{outline:2px solid var(--armband);outline-offset:3px}
+.label{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--chalk-dim)}
+h1,h2,h3{font-family:var(--f-display);text-transform:uppercase;line-height:.95;margin:0;text-wrap:balance}
+h2{font-size:clamp(34px,5vw,52px);font-weight:900;letter-spacing:.01em}
+
+/* top nav */
+.topnav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-block:16px;border-bottom:1px solid var(--line)}
+.topnav .label{color:var(--chalk)}
+.topnav nav{display:flex;flex-wrap:wrap;gap:4px 18px}
+.topnav nav a{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--chalk-dim)}
+.topnav nav a:hover{color:var(--armband)}
+
+.board-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px;padding-block:28px 22px;border-bottom:1px solid var(--line)}
+.who{display:flex;align-items:center;gap:18px}
+/* Shirt: shows assets/images/profile.jpg if it exists, otherwise the striped No. 10 kit. */
+.shirt{width:72px;height:72px;flex:none;display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:34px;position:relative;overflow:hidden;
+  background:repeating-linear-gradient(90deg,var(--chalk) 0 8px,var(--slate) 8px 16px);color:var(--chalk);border:2px solid var(--chalk)}
+.shirt span{background:var(--slate);padding:0 4px;line-height:1}
+.shirt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.who h1{font-size:clamp(40px,7vw,76px);font-weight:900}
+.who p{margin:4px 0 0;color:var(--chalk-dim)}
+.intro{margin:16px 0 0;max-width:62ch;font-size:16px}
+.intro b{color:var(--armband);font-weight:600}
+.head-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.pill{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;border:1px solid var(--chalk);padding:5px 10px;text-transform:uppercase}
+.pill.live{border-color:var(--armband);color:var(--armband)}
+.pill.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--armband);margin-right:8px;vertical-align:1px;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* tactics area */
+.tactics{display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:36px;padding-block:28px;align-items:start}
+.pitch-col{min-width:0}
+
+.scorebar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border:2px solid var(--chalk);margin-bottom:10px}
+.scorebar .side{font-family:var(--f-display);font-weight:700;font-size:20px;text-transform:uppercase;padding:6px 12px;letter-spacing:.03em}
+.scorebar .side.them{text-align:right;color:var(--chalk-dim)}
+.scorebar .score{font-family:var(--f-display);font-weight:900;font-size:32px;padding:2px 14px;background:var(--chalk);color:var(--slate);font-variant-numeric:tabular-nums;line-height:1.2}
+
+.modes{display:flex;gap:0;margin-bottom:10px;border:1px solid var(--line)}
+.modes button{flex:1;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:9px 8px;background:none;color:var(--chalk-dim);border:0;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--chalk);color:var(--slate)}
+.modes button.reset{flex:0 0 auto;border-left:1px solid var(--line);color:var(--chalk)}
+
+.pitch{position:relative;aspect-ratio:68/105;max-width:100%;width:100%;user-select:none;-webkit-user-select:none;
+  background:repeating-linear-gradient(180deg,#121214 0 10%,#0f0f11 10% 20%);border:2px solid var(--chalk);overflow:hidden}
+.pitch.tactics-mode{touch-action:none}
+.pitch svg{position:absolute;inset:0;width:100%;height:100%}
+.chalk{fill:none;stroke:var(--chalk);stroke-width:.35;opacity:.55}
+.goalnet{fill:var(--chalk);opacity:.12;stroke:var(--chalk);stroke-width:.3}
+.run{fill:none;stroke:var(--armband);stroke-width:.45;stroke-dasharray:1.4 1.2;opacity:.8;animation:run 3s linear infinite;transition:opacity .2s}
+@keyframes run{to{stroke-dashoffset:-10.4}}
+.zone{font-family:var(--f-mono);font-size:2.1px;letter-spacing:.3px;fill:var(--chalk-dim);text-transform:uppercase}
+
+.player{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;cursor:pointer;color:var(--chalk);
+  display:flex;flex-direction:column;align-items:center;gap:4px;width:90px;z-index:3}
+.tactics-mode .player{cursor:grab}
+.player.dragging{cursor:grabbing;z-index:6}
+.disc{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:20px;
+  background:var(--slate);border:2px solid var(--chalk);transition:transform .15s,background .15s,color .15s,box-shadow .2s}
+.player.proj .disc{background:var(--chalk);color:var(--slate)}
+.player .nm{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;background:var(--slate);padding:1px 5px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.player:hover .disc{transform:scale(1.08)}
+.player.dragging .disc{transform:scale(1.18);box-shadow:0 0 0 6px rgba(217,180,90,.25)}
+.player[aria-pressed="true"] .disc{background:var(--armband);border-color:var(--armband);color:var(--slate)}
+.player[aria-pressed="true"] .nm{color:var(--armband)}
+.play-mode .player.holder .disc{box-shadow:0 0 0 4px var(--slate),0 0 0 6px var(--armband)}
+
+/* subs bench: extra projects that can be brought on for a forward */
+.bench{margin-top:10px;border:1px solid var(--line);padding:10px 12px 12px}
+.bench-row{display:flex;justify-content:space-around;gap:8px;margin-top:8px}
+.bench .player{position:static;transform:none;width:auto;flex:1;min-width:0}
+
+.opp{position:absolute;transform:translate(-50%,-50%);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px;z-index:2}
+.opp .x{font-family:var(--f-display);font-weight:900;font-size:34px;line-height:.8;color:var(--chalk-dim)}
+.opp .nm{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--chalk-dim);white-space:nowrap}
+.opp.keeper .x{color:var(--chalk)}
+.opp.hit .x{color:var(--armband);transform:scale(1.3)}
+.tactics-mode .opp,.tactics-mode .ball,.tactics-mode .goalmouth{display:none}
+
+.ball{position:absolute;width:16px;height:16px;border-radius:50%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;
+  background:radial-gradient(circle at 35% 35%,#fff 0 40%,var(--chalk) 41% 60%,#6b6a66 61%);box-shadow:0 0 0 2px var(--slate),0 0 14px rgba(217,180,90,.7);
+  transition:left .45s cubic-bezier(.3,.7,.3,1),top .45s cubic-bezier(.3,.7,.3,1)}
+.goalmouth{position:absolute;left:40%;width:20%;top:0;height:5.5%;z-index:4;background:none;border:0;cursor:crosshair}
+.goalmouth.ready{background:repeating-linear-gradient(45deg,rgba(217,180,90,.25) 0 4px,transparent 4px 8px);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.4}}
+
+.goal-burst{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:6px;z-index:8;pointer-events:none;background:rgba(12,12,13,.72);text-align:center;padding:16px}
+.goal-burst strong{font-family:var(--f-display);font-weight:900;font-size:clamp(64px,18vw,120px);line-height:.85;color:var(--armband);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.goal-burst span{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+@keyframes pop{from{transform:scale(.3);opacity:0}}
+
+.commentary{margin-top:10px;border-left:3px solid var(--armband);padding:8px 12px;background:var(--slate-2);min-height:62px}
+.commentary p{margin:2px 0 0;font-size:14px}
+.movelog{margin-top:8px;font-family:var(--f-mono);font-size:11.5px;color:var(--chalk-dim);overflow-wrap:anywhere}
+.shoot{margin-top:8px}
+
+.key{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.key span{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--chalk-dim)}
+.key i{width:12px;height:12px;border-radius:50%;border:2px solid var(--chalk);display:inline-block}
+.key i.f{background:var(--chalk)}
+.key i.r{border-style:dashed;border-color:var(--armband);border-radius:0;height:0;width:18px;border-width:1px 0 0}
+.key b{font-family:var(--f-display);font-size:18px;line-height:1}
+
+/* scouting report */
+.report{min-width:0;border-top:2px solid var(--chalk);padding-top:18px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+.rep-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.rep-num{font-family:var(--f-display);font-weight:900;font-size:96px;line-height:.8;color:transparent;-webkit-text-stroke:2px var(--chalk)}
+.rep-title{font-size:clamp(36px,4.6vw,56px);font-weight:900;margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;background:var(--slate-2);border:1px solid var(--line)}
+.chip.pos{background:var(--chalk);color:var(--slate);border-color:var(--chalk)}
+.chip.status{border-color:var(--chalk-dim)}
+.chip.scored{border-color:var(--armband);color:var(--armband)}
+.rep-note{max-width:60ch;margin:18px 0 0;font-size:16px}
+.rep-blocks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px;max-width:640px}
+.rep-blocks p{margin:6px 0 0;font-size:14.5px}
+.rep-metrics{margin-top:14px;font-family:var(--f-mono);font-size:12px;color:var(--chalk-dim)}
+.attrs{display:grid;gap:12px;margin-top:22px;max-width:520px}
+.attr{display:grid;grid-template-columns:118px 1fr 34px;gap:12px;align-items:center}
+.attr .label{color:var(--chalk)}
+.bar{height:8px;background:var(--slate-2);border:1px solid var(--line);position:relative;overflow:hidden}
+.bar b{position:absolute;inset:0 auto 0 0;background:var(--chalk);transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.attr .v{font-family:var(--f-display);font-weight:700;font-size:20px;text-align:right;font-variant-numeric:tabular-nums}
+.rep-foot{display:flex;flex-wrap:wrap;gap:12px 22px;margin-top:24px;align-items:center}
+.subs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%}
+.btn{font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;
+  background:var(--chalk);color:var(--slate);border:2px solid var(--chalk);padding:8px 16px;cursor:pointer;display:inline-block}
+.btn.ghost{background:none;color:var(--chalk)}
+.btn.gold{background:var(--armband);border-color:var(--armband);color:var(--slate)}
+.btn.sm{font-size:15px;padding:5px 10px}
+.btn:hover{background:var(--armband);border-color:var(--armband);color:var(--slate)}
+.hint{font-size:13px;color:var(--chalk-dim)}
+.howto{margin-top:26px;border-top:1px solid var(--line);padding-top:14px;display:grid;gap:6px;font-size:13.5px;color:var(--chalk-dim);max-width:60ch}
+.howto b{color:var(--chalk);font-weight:600}
+
+section.block{padding-block:44px 8px;border-top:1px solid var(--line)}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.sec-head p{margin:6px 0 0;color:var(--chalk-dim);max-width:52ch}
+.squadlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:18px}
+.card{border:1px solid var(--line);border-top:2px solid var(--chalk);padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;background:var(--slate-2)}
+.card-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.card .no{font-family:var(--f-display);font-weight:900;font-size:36px;line-height:.8;color:transparent;-webkit-text-stroke:1.5px var(--chalk)}
+.card h3{font-size:26px;font-weight:700}
+.card p{margin:0;color:var(--chalk-dim);font-size:14px}
+.card .chips{margin-top:2px}
+.card-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:8px}
+.card-links .none{font-family:var(--f-mono);font-size:11.5px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:2px solid var(--chalk)}
+.stat{padding:16px 18px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat strong{display:block;font-family:var(--f-display);font-weight:900;font-size:clamp(40px,6vw,64px);line-height:1;font-variant-numeric:tabular-nums}
+.fixtures{display:grid;border-top:1px solid var(--line)}
+.fx{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:18px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
+.fx .when{font-family:var(--f-mono);font-size:12.5px;color:var(--chalk-dim);font-variant-numeric:tabular-nums}
+.fx h3{font-size:26px;font-weight:700}
+.fx h3 em{font-style:normal;color:var(--chalk-dim);font-weight:500}
+.fx p{margin:4px 0 0;color:var(--chalk-dim);max-width:62ch}
+.res{font-family:var(--f-display);font-weight:900;font-size:20px;width:44px;height:44px;display:grid;place-items:center;border:2px solid var(--chalk)}
+.res.w{background:var(--chalk);color:var(--slate)}
+.res.live{border-color:var(--armband);color:var(--armband)}
+.trophies{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px 18px}
+.trophy{border-top:2px solid var(--chalk);padding-top:14px;display:flex;flex-direction:column}
+.trophy .place{font-family:var(--f-display);font-weight:900;font-size:44px;line-height:1;color:var(--armband)}
+.trophy h3{font-size:24px;font-weight:700;margin-top:8px}
+.trophy p{margin:6px 0 0;color:var(--chalk-dim);font-size:14px}
+.trophy a{margin-top:10px;font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--chalk)}
+.trophy a:hover{color:var(--armband)}
+.transfer{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:end;border:2px solid var(--chalk);padding:28px;margin-top:6px;
+  background:linear-gradient(90deg,var(--slate) 0 60%,transparent),repeating-linear-gradient(90deg,var(--slate-2) 0 22px,var(--slate) 22px 44px)}
+.transfer h2{font-size:clamp(40px,7vw,80px)}
+.transfer p{color:var(--chalk-dim);max-width:46ch}
+.desk{display:grid;gap:12px;min-width:0}
+.mail{display:flex;border:1px solid var(--chalk);min-width:0}
+.mail code{flex:1;min-width:0;font-family:var(--f-mono);font-size:14px;padding:10px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:all}
+.mail button{border-width:0 0 0 1px}
+.socials{display:flex;flex-wrap:wrap;gap:10px}
+footer{margin-top:40px;color:var(--chalk-dim);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+@media (max-width:860px){
+  .tactics{grid-template-columns:minmax(0,1fr)}
+  .pitch-col{max-width:460px;margin:0 auto;width:100%}
+  .report{position:static}
+  .trophies{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .transfer{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .fx{grid-template-columns:minmax(0,1fr) auto}
+  .fx .when{grid-column:1/-1}
+  .trophies{grid-template-columns:minmax(0,1fr)}
+  .rep-blocks{grid-template-columns:minmax(0,1fr)}
+  .disc{width:34px;height:34px;font-size:16px}
+  .player{width:70px}
+  .player .nm{font-size:8.5px}
+  .opp .x{font-size:26px}
+  .opp .nm{font-size:8px}
+  .rep-num{font-size:72px}
+  .attr{grid-template-columns:96px 1fr 30px}
+  .transfer{padding:20px}
+  .scorebar .side{font-size:16px;padding:6px 8px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topnav">
+    <span class="label">KM · No. 10</span>
+    <nav aria-label="Sections">
+      <a href="#tactics">Squad</a>
+      <a href="#projects">Projects</a>
+      <a href="#stats-h">Stats</a>
+      <a href="#fx-h">Fixtures</a>
+      <a href="#ac-h">Academy</a>
+      <a href="#tr-h">Trophies</a>
+      <a href="#tx-h">Contact</a>
+    </nav>
+  </div>
+
+  <header class="board-head">
+    <div>
+      <div class="who">
+        <div class="shirt" aria-hidden="true">
+          <span>10</span>
+          <!-- Drop your photo at assets/images/profile.jpg and it replaces the kit automatically. -->
+          <img src="assets/images/profile.jpg" alt="" onerror="this.remove()">
+        </div>
+        <div>
+          <span class="label">Matchday squad · Season 2026</span>
+          <h1>Kopano Mogadile</h1>
+          <p>Final-year IT student · Nelson Mandela University · Kuruman, South Africa</p>
+        </div>
+      </div>
+      <p class="intro">Building systems people can <b>actually trust</b> with their data. I'm a mentor, a student leader and an aspiring cloud computing engineer. Most of what I build comes back to one question: who should see what, and how do you prove it without oversharing?</p>
+      <div class="head-cta">
+        <a class="btn" href="#tactics">Meet the squad</a>
+        <a class="btn ghost" href="#projects">See all projects</a>
+        <a class="btn ghost" href="documents/Kopano%20Mogadile%20CV.pdf" target="_blank" rel="noopener">Download CV</a>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="pill">Formation 4-3-3</span>
+      <span class="pill live">Open to transfers</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="tactics" id="tactics" aria-label="Tactics board">
+      <div class="pitch-col">
+        <div class="scorebar" aria-live="polite">
+          <span class="side">My XI</span>
+          <span class="score" id="score">0 – 0</span>
+          <span class="side them">Data Leaks FC</span>
+        </div>
+        <div class="modes" role="group" aria-label="Board mode">
+          <button type="button" id="mode-play" aria-pressed="true">Play a move</button>
+          <button type="button" id="mode-tac" aria-pressed="false">Move players</button>
+          <button type="button" class="reset" id="reset">Reset</button>
+        </div>
+        <div class="pitch play-mode" id="pitch">
+          <svg viewBox="0 0 68 105" preserveAspectRatio="none" aria-hidden="true">
+            <rect class="goalnet" x="30.34" y="0" width="7.32" height="2"/>
+            <rect class="chalk" x="2" y="2" width="64" height="101"/>
+            <line class="chalk" x1="2" y1="52.5" x2="66" y2="52.5"/>
+            <circle class="chalk" cx="34" cy="52.5" r="9.15"/>
+            <rect class="chalk" x="13.84" y="2" width="40.32" height="16.5"/>
+            <rect class="chalk" x="24.84" y="2" width="18.32" height="5.5"/>
+            <rect class="chalk" x="13.84" y="86.5" width="40.32" height="16.5"/>
+            <rect class="chalk" x="24.84" y="97.5" width="18.32" height="5.5"/>
+            <path class="chalk" d="M26.7 18.5a9.15 9.15 0 0 0 14.6 0M26.7 86.5a9.15 9.15 0 0 1 14.6 0"/>
+            <g id="runs"></g>
+            <text class="zone" x="3.5" y="24.5">Projects</text>
+            <text class="zone" x="3.5" y="50.5">Design + access + cloud</text>
+            <text class="zone" x="3.5" y="76">Languages</text>
+            <text class="zone" x="3.5" y="100.5">Foundation</text>
+          </svg>
+          <button type="button" class="goalmouth" id="goal" aria-label="Shoot at goal"></button>
+          <div id="opps"></div>
+          <div id="players"></div>
+          <div class="ball" id="ball" aria-hidden="true"></div>
+          <div class="goal-burst" id="burst" hidden><strong>Goal!</strong><span id="burst-txt"></span></div>
+        </div>
+        <div class="bench">
+          <span class="label">Subs bench · more projects</span>
+          <div class="bench-row" id="bench"></div>
+        </div>
+        <div class="commentary" aria-live="polite">
+          <span class="label">Live commentary</span>
+          <p id="comm">The keeper has the ball. Tap a teammate to pass. Watch out for the X's: if your pass goes near one, it gets intercepted.</p>
+          <div class="movelog" id="movelog"></div>
+          <button type="button" class="btn gold shoot" id="shoot" hidden>Shoot!</button>
+        </div>
+        <div class="key">
+          <span><i></i>Skill</span>
+          <span><i class="f"></i>Project</span>
+          <span><b>X</b>Opposition</span>
+          <span><i class="r"></i>Skills feeding a project</span>
+        </div>
+      </div>
+
+      <article class="report" id="report" aria-live="polite">
+        <div class="rep-head">
+          <div>
+            <span class="label" id="r-kind">Scouting report</span>
+            <h2 class="rep-title" id="r-name"></h2>
+          </div>
+          <div class="rep-num" id="r-num" aria-hidden="true"></div>
+        </div>
+        <div class="chips" id="r-chips"></div>
+        <div id="r-body"></div>
+        <div class="attrs" id="r-attrs"></div>
+        <div class="rep-foot" id="r-foot"></div>
+        <div class="howto">
+          <span class="label">How to play</span>
+          <span><b>Play a move:</b> pass from the keeper up the pitch. Each player you pass to shows their scouting report.</span>
+          <span><b>Score:</b> get the ball to a project up front, then shoot when the keeper (Deadline) is out of position.</span>
+          <span><b>Subs:</b> tap a project on the bench to read its report and bring it on for one of the forwards.</span>
+          <span><b>Move players:</b> drag anyone to build your own formation and open passing lanes. Your setup is remembered.</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="block" id="projects" aria-labelledby="pj-h">
+      <div class="sec-head"><div><span class="label">Projects</span><h2 id="pj-h">Full squad list</h2>
+        <p>All 14 projects in one place. Public code and live demos are one click away; private repos can be shared on request.</p></div>
+        <a class="btn ghost" href="https://github.com/IsagoMogadile?tab=repositories" target="_blank" rel="noopener">All repos on GitHub ↗</a></div>
+      <div class="squadlist" id="squadlist"></div>
+    </section>
+
+    <section class="block" aria-labelledby="stats-h">
+      <div class="sec-head"><div><span class="label">Season so far</span><h2 id="stats-h">Season stats</h2></div></div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="block" aria-labelledby="fx-h">
+      <div class="sec-head"><div><span class="label">Experience</span><h2 id="fx-h">Fixtures &amp; results</h2>
+        <p>Every club I've played for, most recent first.</p></div></div>
+      <div class="fixtures" id="fixtures"></div>
+    </section>
+
+    <section class="block" aria-labelledby="ac-h">
+      <div class="sec-head"><div><span class="label">Education</span><h2 id="ac-h">The academy</h2>
+        <p>Where I trained, and the coursework behind the projects.</p></div></div>
+      <div class="fixtures" id="academy"></div>
+      <!-- Code of Conduct letter: add documents/code-of-conduct.pdf, then uncomment this.
+      <p style="margin-top:20px"><a class="btn ghost" href="documents/code-of-conduct.pdf" target="_blank" rel="noopener">View Code of Conduct letter</a></p>
+      -->
+    </section>
+
+    <section class="block" aria-labelledby="tr-h">
+      <div class="sec-head"><div><span class="label">Achievements</span><h2 id="tr-h">Trophy cabinet</h2>
+        <p>Leadership programmes, certificates and volunteering, with the paperwork to back them up.</p></div></div>
+      <div class="trophies" id="trophies"></div>
+    </section>
+
+    <section class="block" aria-labelledby="tx-h">
+      <div class="transfer">
+        <div>
+          <span class="label">Contact</span>
+          <h2 id="tx-h">Transfer window is open</h2>
+          <p>Looking for a club: graduate roles, internships and interesting problems in IT, cloud and access management. Send an offer and I'll get back to you.</p>
+        </div>
+        <div class="desk">
+          <span class="label">Agent's email</span>
+          <div class="mail"><code id="email">kopanomogadile@gmail.com</code><button class="btn" id="copy" type="button">Copy</button></div>
+          <div class="socials">
+            <a class="btn ghost" href="mailto:kopanomogadile@gmail.com">Email</a>
+            <a class="btn ghost" href="https://github.com/IsagoMogadile" target="_blank" rel="noopener">GitHub</a>
+            <a class="btn ghost" href="https://www.linkedin.com/in/kopano-isago-mogadile-6a0785270/" target="_blank" rel="noopener">LinkedIn</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>© 2026 Kopano Isago Mogadile · Drawn on the tactics board.</span><span>Pass, shoot, sub, or drag players around the pitch.</span></footer>
+</div>
+
+<script>
+/* ===================================================================
+   EDIT YOUR SQUAD SHEET HERE
+   - kind:"project" players are your projects; kind:"skill" are skills.
+   - bench:true puts a project on the subs bench instead of the pitch.
+   - feeds: which skills (by id) "pass into" a project. Drawn as gold runs.
+   - link / github: leave as "#" to hide that button until you have a URL.
+   - attrs on skills are SELF-RATINGS out of 100. Set them to your own.
+   =================================================================== */
+const SQUAD = [
+  // Forwards = projects
+  {id:"p1",kind:"project",num:9,x:22,y:20,short:"Vehicle Service",name:"Vehicle Service Management App",pos:"Striker",years:"2025",
+   status:"Shipped · Group project",role:"Group project · Android development",
+   problem:"A vehicle service company's workshop still ran on paper. Customer bookings, vehicle records and mechanic assignments had no shared digital system behind them.",
+   approach:"An Android app (Java + SQLite) with role-based access for Admins, Mechanics and Customers: customer, vehicle and mechanic management, service booking and status tracking, full CRUD, and role-based login and navigation.",
+   tags:["Java","Android","SQLite","Role-based access"],feeds:["d2","m2","m1"],link:"#",github:"#"},
+  {id:"p2",kind:"project",num:10,x:50,y:16,short:"UbuntuID",name:"UbuntuID",pos:"Captain · No. 10",years:"2026",
+   status:"Live demo · Capstone",role:"Final-year capstone · Team TechMinions (4) · Team lead, system design",captain:true,
+   problem:"South Africa's identity data is scattered across departments with no shared, verifiable, citizen-controlled record, and no clean way to prove one fact (\"I'm over 18\") without exposing everything else.",
+   approach:"One verified digital profile per citizen, with records from Home Affairs, SARS, SAPS, SASSA and more linked to it. Officials see only their own department's data, enforced by Row Level Security in the database, not just the UI. Citizens hold a QR-verifiable ID and a document wallet, and choose which credentials an organisation may see.",
+   metrics:"University prototype: all people, ID numbers and records are fictional.",
+   tags:["Flutter","Dart","Supabase","PostgreSQL","Row Level Security"],feeds:["m1","m2","d4"],
+   link:"https://ubuntu-id.vercel.app",linkText:"Open live demo",github:"https://github.com/IsagoMogadile/UbuntuID"},
+  {id:"p3",kind:"project",num:11,x:78,y:20,short:"Cool Rides",name:"Cool Rides Production System",pos:"Winger",years:"2025",
+   status:"Shipped · Group project",role:"Group project · IRUD301, software engineering & design patterns",
+   problem:"Cool Rides needed to simulate an automobile production environment: separate assembly lines for cars and minibuses, a shared spray booth, and order management from HQ, all with correct real-time synchronised workflows.",
+   approach:"A multi-threaded simulation built around four design patterns applied under real constraints (Abstract Factory, Factory Method, Command and Singleton), with queues coordinating shared resources and live status updates across the system.",
+   tags:["Design patterns","Threading","UML","Git collaboration"],feeds:["m1","g1"],link:"#",github:"#"},
+  // Bench = more projects
+  {id:"p4",kind:"project",num:14,bench:true,x:22,y:20,short:"Flight Tracker",name:"Flight Price Tracker",pos:"Super sub",years:"2025",
+   status:"Shipped · Script, no UI",role:"Independent project · Automation",
+   problem:"Domestic flight prices in South Africa swing constantly, and manually checking dates to catch a good fare is tedious and easy to forget.",
+   approach:"A Playwright scraper that pulls daily one-way JNB → CPT prices from lift.co.za for the next 30 days, then filters and ranks them by price. Built by fighting cookie banners, nested date pickers and headless debugging.",
+   metrics:"Route: JNB → CPT, one-way · Window: next 30 days · Source: lift.co.za",
+   tags:["Python","Playwright","Automation","Web scraping"],feeds:["d3"],link:"#",github:"https://github.com/IsagoMogadile/Flight-Price-Tracker"},
+  {id:"p5",kind:"project",num:17,bench:true,x:22,y:20,short:"Spam Detector",name:"Machine Learning Spam Detector",pos:"Super sub",years:"2025",
+   status:"Shipped · Notebook / script",role:"Independent project · Machine learning",
+   problem:"Spam wastes time and can carry real risk, but heavyweight filtering systems are overkill when all you need is a small classifier you can understand.",
+   approach:"A TF-IDF + Multinomial Naive Bayes pipeline trained on labelled spam/ham data, returning a probability for each class (e.g. Spam 59% / Ham 41%). Kept deliberately minimal, favouring something explainable and easy to retrain over a black box.",
+   tags:["Python","scikit-learn","Pandas","TF-IDF","Naive Bayes"],feeds:["d3"],link:"#",github:"https://github.com/IsagoMogadile/Machine-Learning-Spam-Detector"},
+  {id:"p6",kind:"project",num:19,bench:true,x:22,y:20,short:"Movie Tracker",name:"Nu Metro Movie Tracker",pos:"Super sub",years:"2025",
+   status:"Shipped · Script",role:"Independent project · Web scraping",
+   problem:"Checking what's showing and what's coming soon at Nu Metro means clicking through the site every time, with no simple list to keep or compare.",
+   approach:"A Python scraper that reads \"Now Booking\" straight from Nu Metro's internal JSON API, and parses \"Coming Soon\" from server-rendered HTML with BeautifulSoup (title, genre, runtime, age rating, release date). Both lists are saved to CSV.",
+   tags:["Python","BeautifulSoup","JSON API","CSV"],feeds:["d3"],link:"#",github:"https://github.com/IsagoMogadile/Movie-Tracker"},
+  {id:"p7",kind:"project",num:21,bench:true,x:22,y:20,short:"Proverbs",name:"Proverbs Widget",pos:"Super sub",years:"2026",
+   status:"Shipped · Android widget",role:"Independent project · Android",
+   problem:"I wanted a daily verse on my home screen without opening an app or needing a connection.",
+   approach:"An Android home-screen widget with a glassmorphism card that shows a random verse from Proverbs (KJV). It refreshes daily, shuffles on tap, and adapts to small and large sizes. All 915 verses are bundled locally as JSON, so it works offline.",
+   tags:["Kotlin","Android","App widgets","Offline JSON"],feeds:["d2"],link:"#",github:"https://github.com/IsagoMogadile/Proverbs-Widget"},
+  // Midfield = design, access, cloud
+  {id:"m1",kind:"skill",num:8,x:25,y:45,short:"System Design",name:"System Design & UML",pos:"Central midfield",years:"2 seasons",
+   note:"Reads the game. Breaks a problem into roles, data and flows before a line of code is written, and picks the design pattern that fits.",
+   tags:["UML","Design patterns","Requirements"],attrs:{Skill:78,Vision:82,Experience:64}},
+  {id:"m2",kind:"skill",num:6,x:50,y:49,short:"Access + Auth",name:"Access Control & Identity",pos:"Holding midfield",years:"2 seasons",
+   note:"Decides who gets the ball. Role-based access in my own builds, plus real Active Directory user administration during IT vacation work.",
+   tags:["Role-based access","Row Level Security","JWT / Auth","Active Directory"],attrs:{Skill:76,Vision:84,Experience:62}},
+  {id:"m3",kind:"skill",num:7,x:75,y:45,short:"Cloud + IT",name:"Cloud & IT Support",pos:"Attacking midfield",years:"Rookie season",
+   note:"The position I'm training for. Studying toward Azure AZ-900, with hands-on IT support from the field: workstations, incidents and user accounts.",
+   tags:["Azure AZ-900 (in progress)","IT support","Troubleshooting"],attrs:{Skill:60,Vision:72,Experience:48}},
+  // Defence = languages
+  {id:"d1",kind:"skill",num:2,x:13,y:68,short:"C# / .NET",name:"C# / ASP.NET Core",pos:"Right back",years:"2 seasons",
+   note:"Typed, dependable and solid at the back. My go-to for backend services.",tags:["ASP.NET Core","SQL"],attrs:{Skill:72,Vision:68,Experience:62}},
+  {id:"d2",kind:"skill",num:4,x:37,y:72,short:"Java + Kotlin",name:"Java, Kotlin & Android",pos:"Centre back",years:"2 seasons",
+   note:"Android apps and home-screen widgets, with SQLite storage, activity navigation and input validation.",tags:["Java","Kotlin","Android","SQLite"],attrs:{Skill:72,Vision:66,Experience:62}},
+  {id:"d3",kind:"skill",num:5,x:63,y:72,short:"Python",name:"Python",pos:"Centre back",years:"2 seasons",
+   note:"Automation, scraping and machine learning. Quick tools that just work.",tags:["scikit-learn","Playwright","Scripting"],attrs:{Skill:76,Vision:70,Experience:64}},
+  {id:"d4",kind:"skill",num:3,x:87,y:68,short:"Flutter + JS",name:"Flutter, Dart & JS/TS",pos:"Left back",years:"2 seasons",
+   note:"Front ends that ship: Flutter web (Riverpod, go_router) for UbuntuID, and JavaScript/TypeScript with React elsewhere.",tags:["Flutter","Dart","TypeScript","React"],attrs:{Skill:70,Vision:68,Experience:58}},
+  // Keeper = foundations
+  {id:"g1",kind:"skill",num:1,x:50,y:92,short:"Git + Linux",name:"Git & Linux",pos:"Goalkeeper",years:"2 seasons",
+   note:"The last line. Version control, team collaboration on shared repos and the command line.",tags:["Git / GitHub","Linux","VS Code"],attrs:{Skill:74,Vision:70,Experience:62}},
+];
+// The opposition: things that stop a trustworthy system from shipping
+const OPPONENTS = [
+  {name:"Bugs",bx:36,by:32,ax:14,ay:4,sp:.7},
+  {name:"Oversharing",bx:66,by:30,ax:11,ay:5,sp:.55},
+  {name:"Scope creep",bx:62,by:58,ax:17,ay:4,sp:.5},
+  {name:"Weak passwords",bx:30,by:59,ax:13,ay:5,sp:.62},
+];
+const KEEPER = {name:"Deadline",bx:50,by:5,ax:7,ay:0,sp:1.3,keeper:true};
+const STATS = [["14","Projects built"],["5","Public repos"],["1","Live demo"],["6","Languages spoken"]];
+// res: "live" = still going (ON), "w" = completed (W)
+const FIXTURES = [
+  {when:"Apr 2026 – now",club:"Nelson Mandela University",role:"Test invigilator",res:"live",resTxt:"ON",
+   text:"Department of Applied Technologies. Enforcing exam policy, monitoring sessions, reporting irregularities and handling assessment information confidentially."},
+  {when:"Apr 2026",club:"Ironman South Africa",role:"Volunteer assistant",res:"w",resTxt:"W",
+   text:"Briefed, guided and supervised volunteers, and oversaw post-event operations and site restoration."},
+  {when:"Dec 2024 – Jan 2026",club:"Assmang Black Rock Mining",role:"IT technical assistance",res:"w",resTxt:"W",
+   text:"Two vacation stints. Active Directory user admin and password resets, workstation and printer setup, and logging and escalating IT incidents."},
+  {when:"Feb 2025 – Nov 2025",club:"Grind Club Motive Africa",role:"Volunteer mentor",res:"w",resTxt:"W",
+   text:"Mentored matric learners through university applications, career planning and higher-education decisions."},
+  {when:"Feb 2024 – Nov 2025",club:"Summerstrand Student Village",role:"Residence student leader",res:"w",resTxt:"W",
+   text:"House committee member. Liaison between residents and management, incident reporting, mediation and coordinating student initiatives."},
+  {when:"2024 – 2025",club:"Event volunteering",role:"Ironman & NMU Career Services",res:"w",resTxt:"W",
+   text:"Athlete refreshment stations at two Ironman marathons and guiding students at the NMU careers event."},
+];
+const ACADEMY = [
+  {when:"Feb 2024 – now",club:"Nelson Mandela University",role:"Bachelor of IT, final year",res:"live",resTxt:"ON",
+   text:"Final (3rd) year. Capstone: UbuntuID, built with team TechMinions."},
+  {when:"[MODULE CODE]",club:"Mobile Application Development",role:"Android · Java · SQLite",res:"w",resTxt:"W",
+   text:"Group project module: built the Vehicle Service Management App, a role-based Android app with SQLite CRUD, navigation, authentication and input validation."},
+  {when:"IRUD301",club:"Requirements & UML Design",role:"Design patterns · UML · Concurrency",res:"w",resTxt:"W",
+   text:"Group project module: built the Cool Rides Production System, applying Abstract Factory, Factory Method, Command and Singleton, with UML design and Git collaboration."},
+  {when:"2023",club:"Wrenchville High School",role:"Matriculated",res:"w",resTxt:"W",
+   text:"Selected for the Wits Targeting Talent Programme from 2021 to 2023."},
+];
+const TROPHIES = [
+  {place:"2025",title:"Leaders for Change",text:"Leadership programme, Nelson Mandela University.",file:"documents/Achivement%20Certificates.pdf"},
+  {place:"2025",title:"Global Digital Citizen",text:"Completed the Flourishing as a Global Digital Citizen programme, NMU.",file:"documents/Achivement%20Certificates.pdf"},
+  {place:"2025",title:"Volunteer mentor",text:"Certificate of volunteering, Grind Club Motive Africa NPO.",file:"documents/GMA%20CERTIFICATE.pdf"},
+  {place:"2024",title:"Beyond the Classroom",text:"BtC leadership programme member. Official co-curricular record.",file:"documents/BTC%20Cocurricular%20Record.pdf"},
+  {place:"2024",title:"Intro to Cybersecurity",text:"Cisco Networking Academy."},
+  {place:"2021–23",title:"Targeting Talent",text:"Wits University programme, with exemplary participation in every session.",file:"documents/Achivement%20Certificates.pdf"},
+  {place:"AZ-900",title:"Azure Fundamentals",text:"In progress. Microsoft cloud certification."},
+];
+// More projects: shown in the Full squad list only (not on the pitch). Their repos are private.
+const MORE_PROJECTS = [
+  {num:22,name:"SafeStep",status:"Hackathon prototype",
+   approach:"A campus safety companion for NMU's Summerstrand campuses that treats campus and the off-campus suburb as one safety area. One Flutter app for students and responders, a web admin dashboard, and a real Supabase backend with realtime alerts.",
+   tags:["Flutter","Supabase","Realtime","Google Maps"]},
+  {num:23,name:"Kraal Farm App",status:"In development",
+   approach:"An offline-first livestock app for small-scale farmers: animals, photos, health records, tasks, stock, money and weather. Records made with no signal sync later without loss, and animals belong to the farm account, not the person who typed them in.",
+   tags:["Flutter","Supabase","PowerSync","Offline-first"]},
+  {num:24,name:"UniMS",status:"Shipped · Full stack",
+   approach:"A university management system with a React + TypeScript front end and an ASP.NET Core API covering students, staff, enrolments and results, secured with JWT authentication.",
+   tags:["React","TypeScript","ASP.NET Core","JWT","Docker"]},
+  {num:25,name:"Event Ticket System",status:"Shipped · Web app",
+   approach:"An ASP.NET Core MVC app for events, bookings and seat reservations, with an admin area, ASP.NET Identity for accounts and a separate test project.",
+   tags:["C#",".NET 8","Entity Framework","Identity","xUnit"]},
+  {num:26,name:"Jarvis",status:"Working prototype",
+   approach:"A voice assistant in Python: speech-to-text in, spoken replies out, with an LLM that can call tools to tell the time, open apps, search the web and run commands.",
+   tags:["Python","Speech recognition","Text-to-speech","Tool calling"]},
+  {num:27,name:"Thaba NRB Holdings",status:"Website",
+   approach:"A website for a financial and business advisory firm: services, about and contact pages in a single, responsive build.",
+   tags:["HTML","CSS","JavaScript","Responsive"]},
+  {num:28,name:"The Luxury Lifestyle Co.",status:"Website",
+   approach:"A website for The Luxury Lifestyle Company International, presenting its curated services, story and enquiries in an upmarket design.",
+   tags:["HTML","CSS","JavaScript","Responsive"]},
+];
+/* ===================================================================== */
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pitch = $("#pitch"), ball = $("#ball");
+const HOME = Object.fromEntries(SQUAD.map(p=>[p.id,{x:p.x,y:p.y,bench:!!p.bench}]));
+const byId = Object.fromEntries(SQUAD.map(p => [p.id, p]));
+const KEY = "km-tactics-board-v1";
+try{ const saved = JSON.parse(localStorage.getItem(KEY)||"null");
+  if(saved) for(const id in saved) if(byId[id]){Object.assign(byId[id],saved[id]);} }catch(_){}
+function saveFormation(){ try{ localStorage.setItem(KEY, JSON.stringify(Object.fromEntries(SQUAD.map(p=>[p.id,{x:p.x,y:p.y,bench:!!p.bench}])))); }catch(_){} }
+
+let mode = "play", holder = "g1", busy = false, us = 0, them = 0, chain = ["g1"], selected = "p2";
+const scored = new Set();
+const onPitch = () => SQUAD.filter(p => !p.bench);
+
+/* ---------- runs (skills feeding projects) ---------- */
+const runs = $("#runs");
+function drawRuns(){
+  runs.innerHTML = "";
+  onPitch().filter(p => p.feeds).forEach(p => p.feeds.forEach(f => {
+    const a = byId[f]; if(!a) return;
+    const x1=a.x*.68, y1=a.y*1.05, x2=p.x*.68, y2=p.y*1.05+3;
+    const mx=(x1+x2)/2+(x2>x1?-3:3), my=(y1+y2)/2;
+    const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("class","run");
+    path.setAttribute("d",`M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`);
+    const on = p.id===selected || f===selected;
+    path.style.opacity = on ? "1" : ".15";
+    runs.appendChild(path);
+  }));
+}
+
+/* ---------- players ---------- */
+SQUAD.forEach(p => {
+  const b = document.createElement("button");
+  b.type="button"; b.className="player"+(p.kind==="project"?" proj":"");
+  b.id="pl-"+p.id; b.setAttribute("aria-pressed","false");
+  b.setAttribute("aria-label",`${p.name}, ${p.pos}`);
+  b.innerHTML=`<span class="disc">${p.num}</span><span class="nm">${esc(p.short)}${p.captain?" (C)":""}</span>`;
+  attachDrag(b,p);
+  mount(p, b);
+});
+function mount(p, el = $("#pl-"+p.id)){
+  if(p.bench){ $("#bench").appendChild(el); el.style.left=el.style.top=""; }
+  else { $("#players").appendChild(el); place(p); }
+}
+function place(p){ const el=$("#pl-"+p.id); el.style.left=p.x+"%"; el.style.top=p.y+"%"; }
+
+function attachDrag(el,p){
+  let start=null, moved=false;
+  el.addEventListener("pointerdown",e=>{
+    if(mode!=="tactics" || p.bench) return;
+    start={x:e.clientX,y:e.clientY}; moved=false;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove",e=>{
+    if(!start) return;
+    if(!moved && Math.hypot(e.clientX-start.x,e.clientY-start.y)<5) return;
+    moved=true; el.classList.add("dragging");
+    const r=pitch.getBoundingClientRect();
+    p.x=Math.min(95,Math.max(5,(e.clientX-r.left)/r.width*100));
+    p.y=Math.min(96,Math.max(4,(e.clientY-r.top)/r.height*100));
+    place(p); drawRuns();
+  });
+  const end=()=>{ if(!start) return; start=null; el.classList.remove("dragging");
+    if(moved){ saveFormation(); el.dataset.justDragged="1"; setTimeout(()=>delete el.dataset.justDragged,50); } };
+  el.addEventListener("pointerup",end); el.addEventListener("pointercancel",end);
+  el.addEventListener("click",()=>{
+    if(el.dataset.justDragged) return;
+    if(p.bench){ select(p.id); say(`${p.short} is warming up on the bench. Bring them on from the scouting report.`); return; }
+    if(mode==="play") pass(p.id); else select(p.id);
+  });
+}
+
+/* ---------- substitutions ---------- */
+function sub(inId, outId){
+  const a=byId[inId], b=byId[outId];
+  if(busy || !a.bench || b.bench) return;
+  [a.x,b.x]=[b.x,a.x]; [a.y,b.y]=[b.y,a.y];
+  a.bench=false; b.bench=true;
+  mount(b); mount(a);
+  if(chain.includes(outId)){ holder="g1"; chain=["g1"]; }
+  saveFormation(); drawRuns(); updateHolder(); select(inId);
+  say(`Substitution: ${a.short} comes on for ${b.short}.`);
+}
+
+/* ---------- opposition ---------- */
+const oppWrap=$("#opps");
+const allOpps=[...OPPONENTS,KEEPER].map(o=>{
+  const d=document.createElement("div"); d.className="opp"+(o.keeper?" keeper":"");
+  d.innerHTML=`<span class="x">X</span><span class="nm">${esc(o.name)}</span>`;
+  oppWrap.appendChild(d); return {...o,el:d,x:o.bx,y:o.by,ph:Math.random()*6};
+});
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function tick(t){
+  const s=t/1000;
+  allOpps.forEach(o=>{
+    const k = reduce ? 0.35 : 1;
+    o.x=o.bx+Math.sin(s*o.sp*k+o.ph)*o.ax;
+    o.y=o.by+Math.cos(s*o.sp*.8*k+o.ph)*o.ay;
+    o.el.style.left=o.x+"%"; o.el.style.top=o.y+"%";
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ---------- game ---------- */
+function moveBall(x,y){ ball.style.left=x+"%"; ball.style.top=(y-3)+"%"; }
+function updateHolder(){
+  document.querySelectorAll(".player").forEach(el=>el.classList.toggle("holder",el.id==="pl-"+holder));
+  const h=byId[holder]; moveBall(h.x,h.y);
+  const atGoal = h.kind==="project";
+  $("#shoot").hidden=!atGoal || mode!=="play";
+  $("#goal").classList.toggle("ready",atGoal);
+  $("#movelog").textContent = "The move: " + chain.map(id=>byId[id].short).join(" → ");
+}
+function say(t){ $("#comm").textContent=t; }
+function setScore(){ $("#score").textContent=`${us} – ${them}`; }
+
+function distSeg(px,py,ax,ay,bx,by){
+  const dx=bx-ax, dy=by-ay, L=dx*dx+dy*dy;
+  let t=L?((px-ax)*dx+(py-ay)*dy)/L:0; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+function pass(id){
+  if(busy) return;
+  select(id);
+  if(id===holder){ say(`${byId[id].short} has the ball. Pick a teammate to pass to.`); return; }
+  const a=byId[holder], b=byId[id];
+  // check interception in pitch metres
+  let thief=null, best=99;
+  allOpps.filter(o=>!o.keeper).forEach(o=>{
+    const d=distSeg(o.x*.68,o.y*1.05,a.x*.68,a.y*1.05,b.x*.68,b.y*1.05);
+    if(d<4.2 && d<best){best=d;thief=o;}
+  });
+  busy=true;
+  if(thief){
+    moveBall(thief.x,thief.y+3); thief.el.classList.add("hit");
+    say(`Intercepted! ${thief.name} reads the pass from ${a.short} to ${b.short}. Back to the keeper.`);
+    setTimeout(()=>{ thief.el.classList.remove("hit"); them++; setScore(); holder="g1"; chain=["g1"]; updateHolder(); busy=false; },1100);
+    return;
+  }
+  holder=id; chain.push(id); moveBall(b.x,b.y);
+  setTimeout(()=>{
+    busy=false; updateHolder();
+    say(b.kind==="project"
+      ? `${a.short} finds ${b.short} in the final third! Shoot when Deadline is out of position.`
+      : `Clean pass, ${a.short} to ${b.short}. Keep it moving forward.`);
+  },460);
+}
+function shoot(){
+  if(busy || mode!=="play") return;
+  const h=byId[holder]; if(h.kind!=="project"){ say("Get the ball to a project up front before you shoot."); return; }
+  const keeper=allOpps.find(o=>o.keeper);
+  const aim=50+(h.x-50)*.12;
+  busy=true; moveBall(aim,4);
+  setTimeout(()=>{
+    if(Math.abs(keeper.x-aim)<3.6){
+      keeper.el.classList.add("hit");
+      say(`Saved! Deadline gets a hand to it. Back to the keeper. Time your shot when Deadline moves away.`);
+      them++; setScore();
+      setTimeout(()=>{ keeper.el.classList.remove("hit"); holder="g1"; chain=["g1"]; updateHolder(); busy=false; },1000);
+    } else {
+      us++; setScore(); scored.add(h.id);
+      $("#burst-txt").textContent=`${h.name} · ${chain.length-1} pass move`;
+      $("#burst").hidden=false; select(h.id);
+      say(`GOAL! ${h.name} finishes a ${chain.length-1}-pass move. Read the scouting report.`);
+      setTimeout(()=>{ $("#burst").hidden=true; holder="g1"; chain=["g1"]; updateHolder(); busy=false; },1700);
+    }
+  },460);
+}
+$("#shoot").addEventListener("click",shoot);
+$("#goal").addEventListener("click",shoot);
+
+/* ---------- modes ---------- */
+function setMode(m){
+  mode=m;
+  pitch.classList.toggle("play-mode",m==="play");
+  pitch.classList.toggle("tactics-mode",m==="tactics");
+  $("#mode-play").setAttribute("aria-pressed",m==="play");
+  $("#mode-tac").setAttribute("aria-pressed",m==="tactics");
+  say(m==="play"
+    ? "Kick-off. Tap a teammate to pass. Passes that run close to an X get intercepted."
+    : "Tactics mode. Drag any player to a new position, then switch back to play and test your passing lanes.");
+  updateHolder();
+}
+$("#mode-play").addEventListener("click",()=>setMode("play"));
+$("#mode-tac").addEventListener("click",()=>setMode("tactics"));
+$("#reset").addEventListener("click",()=>{
+  if(busy) return;
+  SQUAD.forEach(p=>{Object.assign(p,HOME[p.id]);mount(p);});
+  try{localStorage.removeItem(KEY);}catch(_){}
+  us=0;them=0;setScore();holder="g1";chain=["g1"];drawRuns();updateHolder();select("p2");
+  say("Formation, subs and score reset. Back to the 4-3-3.");
+});
+
+/* ---------- scouting report ---------- */
+function select(id){
+  const p = byId[id]; if(!p) return; selected=id;
+  document.querySelectorAll(".player").forEach(el=>el.setAttribute("aria-pressed", el.id==="pl-"+id ? "true":"false"));
+  drawRuns();
+  const isProj = p.kind==="project";
+  $("#r-kind").textContent = isProj ? "Scouting report · Project" : "Scouting report · Skill";
+  $("#r-name").textContent = p.name;
+  $("#r-num").textContent = p.num;
+  $("#r-chips").innerHTML = `<span class="chip pos">${esc(p.pos)}</span><span class="chip">${esc(p.years)}</span>`
+    + (p.status?`<span class="chip status">${esc(p.status)}</span>`:"")
+    + p.tags.map(t=>`<span class="chip">${esc(t)}</span>`).join("")
+    + (scored.has(id)?`<span class="chip scored">Scored this match</span>`:"");
+  $("#r-body").innerHTML = isProj
+    ? `<p class="rep-note">${esc(p.role)}</p>
+       <div class="rep-blocks"><div><span class="label">The problem</span><p>${esc(p.problem)}</p></div>
+       <div><span class="label">The approach</span><p>${esc(p.approach)}</p></div></div>`
+      + (p.metrics?`<div class="rep-metrics">${esc(p.metrics)}</div>`:"")
+    : `<p class="rep-note">${esc(p.note)}</p>`;
+  const attrs = p.attrs || {};
+  $("#r-attrs").innerHTML = Object.entries(attrs).map(([k,v])=>`<div class="attr"><span class="label">${esc(k)}</span><span class="bar"><b style="width:0"></b></span><span class="v">${v}</span></div>`).join("");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const vals = Object.values(attrs);
+    document.querySelectorAll("#r-attrs .bar b").forEach((b,i)=>b.style.width=vals[i]+"%");
+  }));
+  let foot="";
+  if(isProj){
+    const feeders=(p.feeds||[]).map(f=>byId[f]?.short).filter(Boolean).join(", ");
+    if(p.link && p.link!=="#") foot += `<a class="btn" href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.linkText||"Watch the highlights")}</a>`;
+    if(p.github && p.github!=="#") foot += `<a class="btn ghost" href="${esc(p.github)}" target="_blank" rel="noopener">GitHub</a>`;
+    if(feeders) foot += `<span class="hint">Assisted by ${esc(feeders)}</span>`;
+    if(p.bench){
+      foot += `<div class="subs"><span class="hint">Bring on for:</span>`
+        + onPitch().filter(x=>x.kind==="project").map(x=>`<button type="button" class="btn sm ghost" data-sub="${x.id}">${esc(x.short)}</button>`).join("")
+        + `</div>`;
+    }
+  } else {
+    const used = onPitch().filter(x=>x.feeds&&x.feeds.includes(p.id)).map(x=>x.short);
+    foot = `<span class="hint">${used.length?"Plays the final pass into: "+esc(used.join(", ")):"Holds the shape so the forwards can score."}</span>`;
+  }
+  $("#r-foot").innerHTML = foot;
+  $("#r-foot").querySelectorAll("[data-sub]").forEach(b=>b.addEventListener("click",()=>sub(id,b.dataset.sub)));
+}
+
+const fxRow = f=>`<div class="fx"><span class="when">${esc(f.when)}</span><div><h3>${esc(f.club)} <em>· ${esc(f.role)}</em></h3><p>${esc(f.text)}</p></div><span class="res ${f.res}" title="${f.res==="live"?"Still playing":"Completed"}">${f.resTxt}</span></div>`;
+$("#stats").innerHTML = STATS.map(([n,l])=>`<div class="stat"><strong>${esc(n)}</strong><span class="label">${esc(l)}</span></div>`).join("");
+$("#squadlist").innerHTML = [...SQUAD.filter(p=>p.kind==="project").sort((a,b)=>a.num-b.num), ...MORE_PROJECTS.map(p=>({...p,private:true}))].map(p=>{
+  const links = (p.link&&p.link!=="#"?`<a class="btn sm" href="${esc(p.link)}" target="_blank" rel="noopener">${esc(p.linkText||"View project")} ↗</a>`:"")
+    + (p.github&&p.github!=="#"?`<a class="btn sm ghost" href="${esc(p.github)}" target="_blank" rel="noopener">GitHub ↗</a>`:"");
+  return `<article class="card"><div class="card-top"><div><span class="label">${esc(p.status)}</span><h3>${esc(p.name)}</h3></div><span class="no" aria-hidden="true">${p.num}</span></div>
+    <p>${esc(p.approach)}</p><div class="chips">${p.tags.map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
+    <div class="card-links">${links||`<span class="none">${p.private?"Private repo · code available on request":"University group project · code not public"}</span>`}</div></article>`;
+}).join("");
+$("#fixtures").innerHTML = FIXTURES.map(fxRow).join("");
+$("#academy").innerHTML = ACADEMY.map(fxRow).join("");
+$("#trophies").innerHTML = TROPHIES.map(t=>`<div class="trophy"><div class="place">${esc(t.place)}</div><h3>${esc(t.title)}</h3><p>${esc(t.text)}</p>${t.file?`<a href="${esc(t.file)}" target="_blank" rel="noopener">View certificate ↗</a>`:""}</div>`).join("");
+
+$("#copy").addEventListener("click", async e=>{
+  const btn=e.currentTarget, txt=$("#email").textContent;
+  try{ await navigator.clipboard.writeText(txt); btn.textContent="Copied"; }
+  catch(_){ const r=document.createRange(); r.selectNodeContents($("#email")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent="Selected"; }
+  setTimeout(()=>btn.textContent="Copy",1800);
+});
+
+drawRuns();
+select("p2");
+updateHolder();
+</script>
+
+</body>
+</html>
